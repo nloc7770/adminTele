@@ -17,17 +17,15 @@ const Dashboard = () => {
   );
   useEffect(() => {
     init()
-  }, [])
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        return router.push("/");
-      }
-      router.push("/login");
-    };
     checkSession();
-  } )
+  }, [])
+  const checkSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      return router.push("/");
+    }
+    router.push("/login");
+  };
   const init = async () => {
     const { data } = await supabase
       .from('key')
