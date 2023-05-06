@@ -1,3 +1,4 @@
+"use client"
 import { createClient } from '@supabase/supabase-js';
 import { Button, Card, Input, Modal, Table, notification } from 'antd';
 import { useRouter } from "next/navigation";
