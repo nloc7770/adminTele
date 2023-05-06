@@ -17,7 +17,7 @@ const Dashboard = () => {
   );
   useEffect(() => {
     checkSession();
-    init()
+    // init()
   }, [])
   const checkSession = async () => {
     const { data } = await supabase.auth.getSession();
