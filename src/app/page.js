@@ -34,6 +34,7 @@ const Dashboard = () => {
   }
   const logout = async () => {
     await supabase.auth.signOut()
+    router.push("/login");
   }
   const lock = async (phone, status) => {
     await supabase.from('key').update({ is_active: status }).eq('phone', phone)
