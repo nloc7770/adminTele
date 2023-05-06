@@ -16,9 +16,9 @@ const Dashboard = () => {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzdWNpdGJsdm52ZXhocHJ6enFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzkwNTY1MjUsImV4cCI6MTk5NDYzMjUyNX0.pzFYFIcnIbkU_dpGFUqD8ypd_yCIyKWS5pUgTI2WYn0"
   );
   useEffect(() => {
-    // checkSession();
+    checkSession();
     // init()
-  }, [])
+  })
   const checkSession = async () => {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
