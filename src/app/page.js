@@ -114,8 +114,8 @@ const Dashboard = () => {
           <Button type="primary" style={{ background: "green", marginLeft: "10px" }} onClick={() => {
             lock(record.phone, true)
           }}>Mở khóa</Button>
-          <Button type="primary" style={{ background: "black",color:"white", marginLeft: "10px" }} onClick={() => {
-      deleteAccount(record.phone)
+          <Button type="primary" style={{ background: "black", color: "white", marginLeft: "10px" }} onClick={() => {
+            deleteAccount(record.phone)
           }}>Xóa</Button>
         </div>
       ),
