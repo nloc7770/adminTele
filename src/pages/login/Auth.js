@@ -35,6 +35,7 @@ const AuthUI = () => {
                 appearance={{ theme: ThemeSupa }}
                 theme="light"
                 view="sign_in"
+                showLinks={false}
             />
         </div>
     );
