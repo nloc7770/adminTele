@@ -229,18 +229,6 @@ const Dashboard = () => {
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            label="Mật khẩu"
-            name="password"
-            rules={[
-              {
-                required: true,
-                message: 'Nhập mật khẩu',
-              },
-            ]}
-          >
-            <Input.Password />
-          </Form.Item>
           <Form.Item name="expire_at" label="Ngày hết hạn" rules={[
             {
               required: true,
