@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 const Dashboard = () => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAuth, setIsAuth] = useState(false);
   const [phone, setPhone] = useState("");
   const [dataPhone, setDataPhone] = useState([]);
   const [api, contextHolder] = notification.useNotification();
@@ -16,21 +17,35 @@ const Dashboard = () => {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzdWNpdGJsdm52ZXhocHJ6enFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzkwNTY1MjUsImV4cCI6MTk5NDYzMjUyNX0.pzFYFIcnIbkU_dpGFUqD8ypd_yCIyKWS5pUgTI2WYn0"
   );
   useEffect(() => {
-    checkSession()
+    checkAuth()
     init()
-  },[])
-  const checkSession = async () => {
+  }, [])
+  const checkAuth = async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       router.push("/login");
     }
+    let email = data?.session?.user?.email
+    const { data: dataCheck } = await supabase
+      .from('user')
+      .select('*')
+      .eq('username', email)
+    if (dataCheck) {
+      setIsAuth(true)
+    }
+    if (!dataCheck[0].active) {
+      setIsAuth(true)
+    }
+
+    // setDataPhone(data);
   };
   const init = async () => {
-    const { data } = await supabase
-      .from('key')
-      .select('*')
-      .order('id', { ascending: true })
-    setDataPhone(data);
+    // const { data } = await supabase
+    //   .from('user')
+    //   .select('*')
+    //   .order('id', { ascending: true })
+    //   .eq('username', phone)
+    // setDataPhone(data);
   }
   const logout = async () => {
     await supabase.auth.signOut()
