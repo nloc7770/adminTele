@@ -36,13 +36,18 @@ const Dashboard = () => {
         .from("user")
         .select("*")
         .eq("username", email);
+
+      if (dataCheck.length == 0) {
+        setLoading(false)
+        return setIsAuth(false);
+      }
       if (dataCheck) {
         setIsAuth(true);
       }
       if (!dataCheck[0].active) {
         setIsAuth(false);
       }
-      if (moment().isAfter(dataCheck[0].active)) {
+      if (moment().isAfter(dataCheck[0].expire_at)) {
         setIsAuth(false);
       }
       const { data: dataPhone } = await supabase
@@ -174,6 +179,7 @@ const Dashboard = () => {
       ),
     },
   ];
+  console.log(isAuth);
   return (
     <div
       style={{
