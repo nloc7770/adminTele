@@ -513,10 +513,10 @@ loose-envify@^1.1.0, loose-envify@^1.4.0:
   dependencies:
     js-tokens "^3.0.0 || ^4.0.0"
 
-momment@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/momment/-/momment-0.0.1.tgz#0970260ebbeb505ce9b6f3fe929862e9bed30711"
-  integrity sha512-AvXVohTAJGdvRX+audOcqcQLsezKf4hR+QJf4WY2+sHoW37sejk1hrr0qBffSkwgoSZAjkuQDOqC1FtKE7y8Kw==
+moment@^2.29.4:
+  version "2.29.4"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
+  integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
 
 ms@2.0.0:
   version "2.0.0"

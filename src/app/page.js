@@ -1,15 +1,19 @@
-"use client"
-import { createClient } from '@supabase/supabase-js';
-import { Button, Card, Input, Modal, Table, notification } from 'antd';
+"use client";
+import { createClient } from "@supabase/supabase-js";
+import { Button, Card, Modal, Skeleton, Table, notification } from "antd";
+import moment from "moment";
 import { useRouter } from "next/navigation";
+import Papa from "papaparse";
 import { useEffect, useState } from "react";
 
 const Dashboard = () => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAuth, setIsAuth] = useState(false);
-  const [phone, setPhone] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState(true);
+  const [email, setEmail] = useState("");
   const [dataPhone, setDataPhone] = useState([]);
+  const [dataPhoneAdd, setDataPhoneAdd] = useState([]);
   const [api, contextHolder] = notification.useNotification();
 
   const supabase = createClient(
@@ -17,148 +21,265 @@ const Dashboard = () => {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzdWNpdGJsdm52ZXhocHJ6enFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzkwNTY1MjUsImV4cCI6MTk5NDYzMjUyNX0.pzFYFIcnIbkU_dpGFUqD8ypd_yCIyKWS5pUgTI2WYn0"
   );
   useEffect(() => {
-    checkAuth()
-    init()
-  }, [])
+    checkAuth();
+  }, []);
   const checkAuth = async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      router.push("/login");
-    }
-    let email = data?.session?.user?.email
-    const { data: dataCheck } = await supabase
-      .from('user')
-      .select('*')
-      .eq('username', email)
-    if (dataCheck) {
-      setIsAuth(true)
-    }
-    if (!dataCheck[0].active) {
-      setIsAuth(true)
-    }
 
-    // setDataPhone(data);
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        router.push("/login");
+      }
+      let email = data?.session?.user?.email;
+      setEmail(email);
+      const { data: dataCheck } = await supabase
+        .from("user")
+        .select("*")
+        .eq("username", email);
+      if (dataCheck) {
+        setIsAuth(true);
+      }
+      if (!dataCheck[0].active) {
+        setIsAuth(false);
+      }
+      if (moment().isAfter(dataCheck[0].active)) {
+        setIsAuth(false);
+      }
+      const { data: dataPhone } = await supabase
+        .from('key')
+        .select('*')
+        .eq('user', email)
+      setDataPhone(dataPhone);
+      setLoading(false)
+    } catch (error) {
+      api["error"]({
+        message: "Lỗi",
+        description: error,
+      });
+      setLoading(false)
+
+    }
   };
-  const init = async () => {
-    // const { data } = await supabase
-    //   .from('user')
-    //   .select('*')
-    //   .order('id', { ascending: true })
-    //   .eq('username', phone)
-    // setDataPhone(data);
-  }
   const logout = async () => {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut();
     router.push("/login");
-  }
-  const lock = async (phone, status) => {
-    await supabase.from('key').update({ is_active: status }).eq('phone', phone)
-    api["success"]({
-      message: 'Thành công',
-      description:
-        `Thay đổi trạng thái số điện thoại ${phone} thành công`,
-    });
-    init()
-  }
+  };
   const deleteAccount = async (phone) => {
-    await supabase.from('key').delete().eq('phone', phone)
+    await supabase.from("key").delete().eq("phone", phone);
     api["success"]({
-      message: 'Thành công',
-      description:
-        `Xóa số điện thoại ${phone} thành công`,
+      message: "Thành công",
+      description: `Xóa số điện thoại ${phone} thành công`,
     });
-    init()
-  }
+    checkAuth()
+  };
+  const handleOnChange = (e) => {
+    try {
+      const file = e.target?.files?.[0];
+      // If user clicks the parse button without
+      // a file we show a error
+
+      // Initialize a reader which allows user
+      // to read any file or blob.
+      const reader = new FileReader();
+
+      // Event listener on reader when the file
+      // loads, we parse it and set the data.
+      reader.onload = async ({ target }) => {
+        const csv = Papa.parse(target.result, { header: true });
+        const parsedData = csv?.data;
+        let newArr = [];
+        for (let index = 0; index < parsedData.length; index++) {
+          const element = parsedData[index];
+          if (element.phone)
+            newArr.push({
+              key: `${element.phone}${email}`,
+              user: email,
+              phone: element.phone,
+              is_active: true,
+            });
+        }
+        setDataPhoneAdd(newArr);
+      };
+      reader.readAsText(file);
+    } catch (error) { }
+  };
+
   const createNewKey = async () => {
-    await supabase.from('key').upsert({ phone: phone, is_active: true })
-    setPhone("")
-    init()
+    await supabase.from("key").upsert(dataPhoneAdd);
+    checkAuth();
     setIsModalOpen(false);
+    setDataPhoneAdd([])
     api["success"]({
-      message: 'Thành công',
-      description:
-        'Thêm mới số điện thoại thành công',
+      message: "Thành công",
+      description: "Thêm mới số điện thoại thành công",
     });
-  }
+  };
   const showModal = () => {
     setIsModalOpen(true);
   };
   const handleOk = () => {
-    createNewKey()
-
+    createNewKey();
   };
   const handleCancel = () => {
     setIsModalOpen(false);
-    setPhone("")
   };
   const columns = [
     {
-      title: 'Số thứ tự',
-      dataIndex: 'id',
-      key: 'id',
-      width: 100,
-
+      title: "Số điện thoại",
+      dataIndex: "phone",
+      key: "phone",
     },
     {
-      title: 'Số điện thoại',
-      dataIndex: 'phone',
-      key: 'phone',
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'is_active',
-      width: 300,
-      key: 'is_active',
-      render: (_, record) => {
-        return (
-          <p>{record.is_active ? "Đang hoạt động" : "Đã khóa"}</p>
-        )
-      }
-    },
-    {
-      title: 'Thay đổi trạng thái',
-      key: 'action',
-      width: 300,
+      title: "Thay đổi trạng thái",
+      key: "action",
+      width: 200,
       render: (_, record) => (
         <div>
-          <Button type="primary" style={{ background: "red" }} onClick={() => {
-            lock(record.phone, false)
-          }}>Khóa</Button>
-          <Button type="primary" style={{ background: "green", marginLeft: "10px" }} onClick={() => {
-            lock(record.phone, true)
-          }}>Mở khóa</Button>
-          <Button type="primary" style={{ background: "black", color: "white", marginLeft: "10px" }} onClick={() => {
-            deleteAccount(record.phone)
-          }}>Xóa</Button>
+          <Button
+            type="primary"
+            style={{ background: "black", color: "white", marginLeft: "10px" }}
+            onClick={() => {
+              deleteAccount(record.phone);
+            }}>
+            Xóa
+          </Button>
+        </div>
+      ),
+    },
+  ];
+  const columnsAdd = [
+    {
+      title: "Số điện thoại",
+      dataIndex: "phone",
+      key: "phone",
+    },
+    {
+      title: "Xóa",
+      key: "action",
+      width: 100,
+      render: (_, record) => (
+        <div>
+          <Button
+            type="primary"
+            style={{ background: "black", color: "white", marginLeft: "10px" }}
+            onClick={() => {
+              let newPhoneArr = dataPhoneAdd.filter(function (item) {
+                return item.phone !== record.phone
+              })
+              setDataPhoneAdd(newPhoneArr)
+            }}>
+            Xóa
+          </Button>
         </div>
       ),
     },
   ];
   return (
-    <div style={{ width: "100wh", height: "100vh", display: "flex", justifyContent: "center", flexDirection: "column" }}>
+    <div
+      style={{
+        width: "100wh",
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        flexDirection: "column",
+      }}>
       {contextHolder}
-      <div style={{ width: "100%", display: "flex", justifyContent: "end", padding: "20px" }}>
-        <Button type="primary" onClick={showModal}>
-          Tạo số điện thoại mới
-        </Button>
-        <Button type="primary" onClick={logout} style={{ marginLeft: "10px" }}>Đăng xuất</Button>
-      </div>
-      <div style={{ width: "100%", height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
-        <Card
-          style={{
-            width: "80%",
-          }}
-        >
-          <Table columns={columns} dataSource={dataPhone} />
-        </Card>
-      </div>
-      <Modal title="Thêm số mới" open={isModalOpen} onOk={handleOk} onCancel={handleCancel}>
-        <Input value={phone} placeholder="Nhập số điện thoại" onChange={(e) => {
-          setPhone(e.target.value)
-        }} />
-      </Modal>
+      {loading ?
+        <Skeleton active /> : <>
+          {isAuth ? (
+            <>
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "end",
+                  padding: "20px",
+                }}>
+                <Button type="primary" onClick={showModal}>
+                  Tạo số điện thoại mới
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={logout}
+                  style={{ marginLeft: "10px" }}>
+                  Đăng xuất
+                </Button>
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  height: "100vh",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}>
+                <Card
+                  style={{
+                    width: "80%",
+                  }}>
+                  <Table columns={columns} dataSource={dataPhone} />
+                </Card>
+              </div>
+              <Modal
+                title="Thêm số mới"
+                open={isModalOpen}
+                onOk={handleOk}
+                onCancel={handleCancel}>
+                <label
+                  style={{
+                    padding: 8,
+                    borderRadius: 8,
+                    backgroundColor: "Highlight",
+                    display: "block",
+                    cursor: "pointer",
+                    color: "white",
+                    width: "fit-content",
+                  }}>
+                  <input
+                    onChange={handleOnChange}
+                    id="csvInput"
+                    name="file"
+                    type="File"
+                    accept={".csv"}
+                    style={{ display: "none" }}
+                  />
+                  Lấy danh sách số điện thoại
+                </label>
+                <Table columns={columnsAdd} dataSource={dataPhoneAdd} size="small" style={{ marginTop: 15 }} />
+
+              </Modal>
+            </>
+          ) : (
+            <>
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "end",
+                  padding: "20px",
+                }}>
+                <Button
+                  type="primary"
+                  onClick={logout}
+                  style={{ marginLeft: "10px" }}>
+                  Đăng xuất
+                </Button>
+              </div>
+              <div
+                style={{
+                  width: "100%",
+                  height: "100vh",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}>
+                Tài khoản đã hết hạn hoặc bị khóa
+              </div>
+            </>
+          )}
+        </>}
     </div>
   );
-}
+};
 
 export default Dashboard;
