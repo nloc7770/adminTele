@@ -188,6 +188,7 @@ const Dashboard = () => {
         display: "flex",
         justifyContent: "center",
         flexDirection: "column",
+        backgroundColor: "lightsteelblue"
       }}>
       {contextHolder}
       {loading ?
@@ -231,26 +232,58 @@ const Dashboard = () => {
                 open={isModalOpen}
                 onOk={handleOk}
                 onCancel={handleCancel}>
-                <label
-                  style={{
-                    padding: 8,
-                    borderRadius: 8,
-                    backgroundColor: "Highlight",
-                    display: "block",
-                    cursor: "pointer",
-                    color: "white",
-                    width: "fit-content",
-                  }}>
-                  <input
-                    onChange={handleOnChange}
-                    id="csvInput"
-                    name="file"
-                    type="File"
-                    accept={".csv"}
-                    style={{ display: "none" }}
-                  />
-                  Lấy danh sách số điện thoại
-                </label>
+                <div style={{ display: "flex", flexDirection: "row", width: "100%", justifyContent: "space-between" }}>
+                  <label
+                    style={{
+                      padding: 8,
+                      borderRadius: 8,
+                      backgroundColor: "green",
+                      display: "block",
+                      cursor: "pointer",
+                      color: "white",
+                      width: "fit-content",
+
+                    }}>
+                    <input
+                      onChange={handleOnChange}
+                      id="csvInput"
+                      name="file"
+                      type="File"
+                      accept={".csv"}
+                      style={{ display: "none" }}
+                    />
+                    Lấy danh sách số điện thoại
+                  </label>
+                  <a
+                    href='https://res.cloudinary.com/dfs1kb2dk/raw/upload/v1684048056/telegram_xcel/templet_admin_add_user_j819n7_vcoljg.csv'
+                    style={{
+                      padding: 8,
+                      borderRadius: 8,
+                      backgroundColor: "Highlight",
+                      display: "block",
+                      cursor: "pointer",
+                      color: "white",
+                      width: "fit-content",
+                    }}>
+                    Lấy file mẫu
+                  </a>
+                  <a
+                    onClick={() => {
+                      setDataPhoneAdd([])
+                    }}
+                    style={{
+                      padding: 8,
+                      borderRadius: 8,
+                      backgroundColor: "black",
+                      display: "block",
+                      cursor: "pointer",
+                      color: "white",
+                      width: "fit-content",
+
+                    }}>
+                    Xóa danh sách
+                  </a>
+                </div>
                 <Table columns={columnsAdd} dataSource={dataPhoneAdd} size="small" style={{ marginTop: 15 }} />
 
               </Modal>
@@ -278,6 +311,8 @@ const Dashboard = () => {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  fontSize: 40,
+                  fontWeight: 800
                 }}>
                 Tài khoản đã hết hạn hoặc bị khóa
               </div>
