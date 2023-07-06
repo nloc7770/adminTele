@@ -1,19 +1,25 @@
 "use client";
 import { createClient } from "@supabase/supabase-js";
-import { Button, Card, Input, Modal, Table, notification, Form, DatePicker } from "antd";
+import { Button, Card, Input, Modal, Table, notification, Form, DatePicker, Popover } from "antd";
+import { CaretUpOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
+import ModalExtention from "./modal/ModalExtention";
+import ModalResetPassword from "./modal/ModalResetPassword";
+const { Search } = Input;
 const Dashboard = () => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userExtention, setUserExtention] = useState(undefined)
+  const [userResetPassWord, setUserResetPassWord] = useState(undefined)
+  const [openPopover, setOpenPopover] = useState(false)
   const [dataUser, setDataUser] = useState([]);
   const [api, contextHolder] = notification.useNotification();
   const [form] = Form.useForm();
 
 
-  
+
   const supabase = createClient(
     "https://qsucitblvnvexhprzzqa.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzdWNpdGJsdm52ZXhocHJ6enFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzkwNTY1MjUsImV4cCI6MTk5NDYzMjUyNX0.pzFYFIcnIbkU_dpGFUqD8ypd_yCIyKWS5pUgTI2WYn0"
@@ -93,15 +99,17 @@ const Dashboard = () => {
       key: "active",
       dataIndex: "active",
       render: (_, record) => {
-        return <p>{moment().isAfter(record.expire_at)?"Hết hạn":record.active ? "Hoạt động" : "Khóa"}</p>;
+        return <p>{moment().isAfter(record.expire_at) ? "Hết hạn" : record.active ? "Hoạt động" : "Khóa"}</p>;
       },
     },
     {
       title: "Thay đổi trạng thái",
       key: "action",
       width: 400,
+      align: 'right',
       render: (_, record) => (
         <div>
+
           <Button
             type="primary"
             style={{ background: "red" }}
@@ -127,6 +135,41 @@ const Dashboard = () => {
             Xóa
           </Button>
 
+          <Popover open={openPopover == record.username} content={
+            () => (
+              <>
+                <Button
+                  type="primary"
+                  style={{ background: "orange" }}
+                  onClick={() => {
+
+                    setUserResetPassWord(record.username)
+                    setOpenPopover(false)
+                  }}>
+                  Đổi mật khẩu
+                </Button>
+                <Button
+                  type="primary"
+                  style={{ background: "blue", marginLeft: "10px" }}
+                  onClick={() => {
+
+                    setUserExtention(record.username)
+                    setOpenPopover(false)
+                  }}>
+                  Gia hạn
+                </Button>
+
+              </>
+            )
+          } title="" trigger="click">
+            <Button type="primary"
+              style={{ background: "gray", marginLeft: "10px" }}
+              onClick={() => setOpenPopover(record.username)}
+            >
+              <CaretUpOutlined />
+            </Button>
+          </Popover>
+
         </div>
       ),
     },
@@ -148,6 +191,60 @@ const Dashboard = () => {
       });
     }
   };
+
+
+  const handleSearch = async (value) => {
+
+    const { data } = await supabase
+      .from("user")
+      .select("*")
+      .ilike('username', '%' + value + '%')
+      .order("created_at", { ascending: true });
+    if (!data) return setDataUser([]);
+    setDataUser(data);
+
+  }
+
+  const handleUpdateExtention = async (date) => {
+    if(!date){
+      api["error"]({
+        message: "Lỗi",
+        description: `Vui lòng chọn thời gian gia hạn`,
+      });
+
+      return
+    }
+    await supabase.from("user").update({ expire_at: date }).eq("username", userExtention);
+
+    api["success"]({
+      message: "Thành công",
+      description: `Thay đổi thời gian gia hạn khách hàng ${userExtention} thành công`,
+    });
+    setUserExtention(false)
+    init()
+  }
+
+  const handleUpdatePassword = async (password) => {
+    if(!password){
+      api["error"]({
+        message: "Lỗi",
+        description: `Vui lòng nhập mật khẩu mới`,
+      });
+
+      return
+    }
+    await supabase.from("user").update({ password: password }).eq("", userResetPassWord);
+
+    api["success"]({
+      message: "Thành công",
+      description: `Thay đổi thời gian gia hạn khách hàng ${userResetPassWord} thành công`,
+    });
+    setUserResetPassWord(false)
+
+    init()
+
+  }
+
   return (
     <div
       style={{
@@ -156,7 +253,8 @@ const Dashboard = () => {
         display: "flex",
         justifyContent: "center",
         flexDirection: "column",
-        overflow: "scroll"
+        overflow: "scroll",
+        backgroundColor: "white"
       }}>
       {contextHolder}
       <div
@@ -173,6 +271,7 @@ const Dashboard = () => {
           Đăng xuất
         </Button>
       </div>
+
       <div
         style={{
           width: "100%",
@@ -180,7 +279,26 @@ const Dashboard = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
+          flexDirection: "column"
         }}>
+
+        <Card
+          style={{
+            width: "80%",
+            marginBottom: 8,
+            padding: 0,
+            textAlign: "end"
+          }}>
+          <Search
+            placeholder="Tìm kiếm"
+            allowClear
+            size="large"
+            onSearch={handleSearch}
+            style={{
+              width: 300,
+            }}
+          />
+        </Card>
         <Card
           style={{
             width: "80%",
@@ -188,9 +306,11 @@ const Dashboard = () => {
           <Table
             columns={columns}
             dataSource={dataUser}
+            rowKey={(p) => p?.username}
           />
         </Card>
       </div>
+
       <Modal
         title="Thêm khách hàng mới"
         open={isModalOpen}
@@ -249,6 +369,17 @@ const Dashboard = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {userExtention ?
+        <ModalExtention open={userExtention} onClose={() => setUserExtention(false)} onConfirm={handleUpdateExtention} />
+        : null
+      }
+
+      {userResetPassWord ?
+        <ModalResetPassword open={userResetPassWord} onClose={() => setUserResetPassWord(false)} onConfirm={handleUpdatePassword} />
+        : null
+      }
+
 
     </div>
   );
