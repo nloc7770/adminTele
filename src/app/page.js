@@ -28,7 +28,7 @@ const Dashboard = () => {
   const [dataUser, setDataUser] = useState([]);
   const [api, contextHolder] = notification.useNotification();
   const [form] = Form.useForm();
-  const [width, setWidth] = useState(window.innerWidth);
+  const [width, setWidth] = useState(0);
 
   function handleWindowSizeChange() {
     setWidth(window.innerWidth);
