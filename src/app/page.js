@@ -34,7 +34,10 @@ const Dashboard = () => {
     setWidth(window.innerWidth);
   }
   useEffect(() => {
-    window.addEventListener("resize", handleWindowSizeChange);
+    if (typeof window !== "undefined") {
+      //Only add the event listener client-side
+      window.addEventListener("resize", handleWindowSizeChange);
+    }
     return () => {
       window.removeEventListener("resize", handleWindowSizeChange);
     };
