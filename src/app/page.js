@@ -316,7 +316,7 @@ const Dashboard = () => {
   return (
     <div className="w-screen h-screen flex flex-col justify-center items-center overflow-scroll bg-white">
       {contextHolder}
-      <div className="w-full block md:flex md:justify-end p-5  sticky bg-white">
+      <div className="w-full block md:flex md:justify-end p-5 z-200 sticky bg-white">
         <div
           className="!bg-[#1677ff] text-white shadow-md md:top-0 top-10 p-2 md:mr-2 cursor-pointer rounded-md md:mb-0 mb-2 h-fit"
           onClick={showModal}
@@ -331,8 +331,8 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="w-full h-full block md:flex flex-col justify-center items-center md:mt-[100px]">
-        <Card className="w-[80%] mb-2 p-0 text-end">
+      <div className="w-full h-full  md:flex flex-col justify-center items-center mt-[150px] ">
+        <Card className="md:w-[80%] w-screen mb-2 p-0 text-end ">
           <Search
             placeholder="Tìm kiếm"
             allowClear
@@ -343,7 +343,7 @@ const Dashboard = () => {
             }}
           />
         </Card>
-        <Card className="md:w-[80%] block w-screen">
+        <Card className="md:w-[80%]  w-screen">
           <Table
             columns={columns}
             dataSource={dataUser}
