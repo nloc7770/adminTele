@@ -1,25 +1,46 @@
 "use client";
+import { CaretUpOutlined } from "@ant-design/icons";
 import { createClient } from "@supabase/supabase-js";
-import { Button, Card, Input, Modal, Table, notification, Form, DatePicker, Popover } from "antd";
-import { CaretUpOutlined } from '@ant-design/icons';
-import moment from 'moment';
+import {
+  Button,
+  Card,
+  DatePicker,
+  Form,
+  Input,
+  Modal,
+  Popover,
+  Table,
+  notification,
+} from "antd";
+import moment from "moment";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import ModalExtention from "./modal/ModalExtention";
 import ModalResetPassword from "./modal/ModalResetPassword";
+
 const { Search } = Input;
 const Dashboard = () => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [userExtention, setUserExtention] = useState(undefined)
-  const [userResetPassWord, setUserResetPassWord] = useState(undefined)
-  const [openPopover, setOpenPopover] = useState(false)
+  const [userExtention, setUserExtention] = useState(undefined);
+  const [userResetPassWord, setUserResetPassWord] = useState(undefined);
+  const [openPopover, setOpenPopover] = useState(false);
   const [dataUser, setDataUser] = useState([]);
   const [api, contextHolder] = notification.useNotification();
   const [form] = Form.useForm();
+  const [width, setWidth] = useState(window.innerWidth);
 
+  function handleWindowSizeChange() {
+    setWidth(window.innerWidth);
+  }
+  useEffect(() => {
+    window.addEventListener("resize", handleWindowSizeChange);
+    return () => {
+      window.removeEventListener("resize", handleWindowSizeChange);
+    };
+  }, []);
 
-
+  const isMobile = width <= 768;
   const supabase = createClient(
     "https://qsucitblvnvexhprzzqa.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzdWNpdGJsdm52ZXhocHJ6enFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzkwNTY1MjUsImV4cCI6MTk5NDYzMjUyNX0.pzFYFIcnIbkU_dpGFUqD8ypd_yCIyKWS5pUgTI2WYn0"
@@ -71,7 +92,6 @@ const Dashboard = () => {
     setIsModalOpen(false);
   };
 
-
   const columns = [
     {
       title: "Tên khách hàng",
@@ -82,6 +102,8 @@ const Dashboard = () => {
       title: "Ngày tạo",
       key: "created_at",
       dataIndex: "created_at",
+      responsive: ["sm"],
+
       render: (_, record) => {
         return <p>{moment(record.created_at).format("DD-MM-YYYY")}</p>;
       },
@@ -90,6 +112,8 @@ const Dashboard = () => {
       title: "Ngày hết hạn",
       key: "expire_at",
       dataIndex: "expire_at",
+      responsive: ["sm"],
+
       render: (_, record) => {
         return <p>{moment(record.expire_at).format("DD-MM-YYYY")}</p>;
       },
@@ -97,79 +121,119 @@ const Dashboard = () => {
     {
       title: "Trạng thái",
       key: "active",
+      responsive: ["sm"],
       dataIndex: "active",
       render: (_, record) => {
-        return <p>{moment().isAfter(record.expire_at) ? "Hết hạn" : record.active ? "Hoạt động" : "Khóa"}</p>;
+        return (
+          <p>
+            {moment().isAfter(record.expire_at)
+              ? "Hết hạn"
+              : record.active
+              ? "Hoạt động"
+              : "Khóa"}
+          </p>
+        );
       },
     },
     {
-      title: "Thay đổi trạng thái",
+      title: "Tùy chọn",
       key: "action",
-      width: 400,
-      align: 'right',
+      width: isMobile ? 300 : 400,
+      align: "right",
       render: (_, record) => (
-        <div>
-
+        <div className="flex flex-col md:flex-row justify-center items-center">
           <Button
-            type="primary"
+            type="primary "
             style={{ background: "red" }}
+            className="mb-2 md:mb-0"
             onClick={() => {
               lockByUser(record.username, false);
-            }}>
+            }}
+          >
             Khóa
           </Button>
           <Button
-            type="primary"
+            className="md:block hidden"
+            type="primary "
             style={{ background: "green", marginLeft: "10px" }}
             onClick={() => {
               lockByUser(record.username, true);
-            }}>
+            }}
+          >
             Mở khóa
           </Button>
           <Button
+            className="md:block hidden"
             type="primary"
             style={{ background: "black", color: "white", marginLeft: "10px" }}
             onClick={() => {
               deleteAccountByUser(record.username);
-            }}>
+            }}
+          >
             Xóa
           </Button>
 
-          <Popover open={openPopover == record.username} content={
-            () => (
-              <>
+          <Popover
+            // open={openPopover == record.username}
+            content={() => (
+              <div className="md:block grid grid-cols-2 gap 4 w-screen md:w-fit">
+                <Button
+                  className=" md:hidden"
+                  type="primary "
+                  style={{ background: "green", marginLeft: "10px" }}
+                  onClick={() => {
+                    lockByUser(record.username, true);
+                  }}
+                >
+                  Mở khóa
+                </Button>
+                <Button
+                  className=" md:hidden"
+                  type="primary"
+                  style={{
+                    background: "black",
+                    color: "white",
+                    marginLeft: "10px",
+                  }}
+                  onClick={() => {
+                    deleteAccountByUser(record.username);
+                  }}
+                >
+                  Xóa
+                </Button>
                 <Button
                   type="primary"
                   style={{ background: "orange" }}
                   onClick={() => {
-
-                    setUserResetPassWord(record.username)
-                    setOpenPopover(false)
-                  }}>
+                    setUserResetPassWord(record.username);
+                    setOpenPopover(false);
+                  }}
+                >
                   Đổi mật khẩu
                 </Button>
                 <Button
                   type="primary"
                   style={{ background: "blue", marginLeft: "10px" }}
                   onClick={() => {
-
-                    setUserExtention(record.username)
-                    setOpenPopover(false)
-                  }}>
+                    setUserExtention(record.username);
+                    setOpenPopover(false);
+                  }}
+                >
                   Gia hạn
                 </Button>
-
-              </>
-            )
-          } title="" trigger="click">
-            <Button type="primary"
+              </div>
+            )}
+            title=""
+            trigger="click"
+          >
+            <Button
+              type="primary"
               style={{ background: "gray", marginLeft: "10px" }}
               onClick={() => setOpenPopover(record.username)}
             >
               <CaretUpOutlined />
             </Button>
           </Popover>
-
         </div>
       ),
     },
@@ -178,7 +242,7 @@ const Dashboard = () => {
     try {
       await supabase.from("user").upsert(values);
       form.resetFields();
-      setIsModalOpen(false)
+      setIsModalOpen(false);
       api["success"]({
         message: "Thành công",
         description: "Thêm khách hàng thành công",
@@ -192,103 +256,80 @@ const Dashboard = () => {
     }
   };
 
-
   const handleSearch = async (value) => {
-
     const { data } = await supabase
       .from("user")
       .select("*")
-      .ilike('username', '%' + value + '%')
+      .ilike("username", "%" + value + "%")
       .order("created_at", { ascending: true });
     if (!data) return setDataUser([]);
     setDataUser(data);
-
-  }
+  };
 
   const handleUpdateExtention = async (date) => {
-    if(!date){
+    if (!date) {
       api["error"]({
         message: "Lỗi",
         description: `Vui lòng chọn thời gian gia hạn`,
       });
 
-      return
+      return;
     }
-    await supabase.from("user").update({ expire_at: date }).eq("username", userExtention);
+    await supabase
+      .from("user")
+      .update({ expire_at: date })
+      .eq("username", userExtention);
 
     api["success"]({
       message: "Thành công",
       description: `Thay đổi thời gian gia hạn khách hàng ${userExtention} thành công`,
     });
-    setUserExtention(false)
-    init()
-  }
+    setUserExtention(false);
+    init();
+  };
 
   const handleUpdatePassword = async (password) => {
-    if(!password){
+    if (!password) {
       api["error"]({
         message: "Lỗi",
         description: `Vui lòng nhập mật khẩu mới`,
       });
 
-      return
+      return;
     }
-    await supabase.from("user").update({ password: password }).eq("", userResetPassWord);
+    await supabase
+      .from("user")
+      .update({ password: password })
+      .eq("", userResetPassWord);
 
     api["success"]({
       message: "Thành công",
       description: `Thay đổi thời gian gia hạn khách hàng ${userResetPassWord} thành công`,
     });
-    setUserResetPassWord(false)
+    setUserResetPassWord(false);
 
-    init()
-
-  }
-
+    init();
+  };
   return (
-    <div
-      style={{
-        width: "100wh",
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        flexDirection: "column",
-        overflow: "scroll",
-        backgroundColor: "white"
-      }}>
+    <div className="w-screen h-screen flex flex-col justify-center items-center overflow-scroll bg-white">
       {contextHolder}
-      <div
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "end",
-          padding: "20px",
-        }}>
-        <Button type="primary" onClick={showModal}>
+      <div className="w-full block md:flex md:justify-end p-5  sticky bg-white">
+        <div
+          className="!bg-[#1677ff] text-white shadow-md md:top-0 top-10 p-2 md:mr-2 cursor-pointer rounded-md md:mb-0 mb-2 h-fit"
+          onClick={showModal}
+        >
           Thêm khách hàng mới
-        </Button>
-        <Button type="primary" onClick={logout} style={{ marginLeft: "10px" }}>
+        </div>
+        <div
+          className="!bg-[#1677ff] text-white shadow-md md:top-0 top-10 cursor-pointer p-2 rounded-md h-fit"
+          onClick={logout}
+        >
           Đăng xuất
-        </Button>
+        </div>
       </div>
 
-      <div
-        style={{
-          width: "100%",
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          flexDirection: "column"
-        }}>
-
-        <Card
-          style={{
-            width: "80%",
-            marginBottom: 8,
-            padding: 0,
-            textAlign: "end"
-          }}>
+      <div className="w-full h-full block md:flex flex-col justify-center items-center md:mt-[100px]">
+        <Card className="w-[80%] mb-2 p-0 text-end">
           <Search
             placeholder="Tìm kiếm"
             allowClear
@@ -299,14 +340,49 @@ const Dashboard = () => {
             }}
           />
         </Card>
-        <Card
-          style={{
-            width: "80%",
-          }}>
+        <Card className="md:w-[80%] block w-screen">
           <Table
             columns={columns}
             dataSource={dataUser}
             rowKey={(p) => p?.username}
+            expandable={
+              isMobile && {
+                expandedRowRender: (record) => (
+                  <table class="table-auto">
+                    <thead>
+                      <tr>
+                        <th>Ngày tạo</th>
+                        <th>Ngày hết hạn</th>
+                        <th>Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <p className="flex justify-center">
+                            {moment(record.created_at).format("DD-MM-YYYY")}
+                          </p>
+                        </td>
+                        <td>
+                          <p className="flex justify-center">
+                            {moment(record.expire_at).format("DD-MM-YYYY")}
+                          </p>
+                        </td>
+                        <td>
+                          <p className="flex justify-center">
+                            {moment().isAfter(record.expire_at)
+                              ? "Hết hạn"
+                              : record.active
+                              ? "Hoạt động"
+                              : "Khóa"}
+                          </p>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                ),
+              }
+            }
           />
         </Card>
       </div>
@@ -316,7 +392,8 @@ const Dashboard = () => {
         open={isModalOpen}
         onCancel={handleCancel}
         footer={<></>}
-        style={{ display: "flex", flexDirection: "column" }}>
+        className="flex flex-col"
+      >
         <Form
           form={form}
           name="basic"
@@ -343,18 +420,22 @@ const Dashboard = () => {
             rules={[
               {
                 required: true,
-                message: 'Nhập tài khoản',
+                message: "Nhập tài khoản",
               },
             ]}
           >
             <Input />
           </Form.Item>
-          <Form.Item name="expire_at" label="Ngày hết hạn" rules={[
-            {
-              required: true,
-              message: 'Nhập ngày hết hạn',
-            },
-          ]}>
+          <Form.Item
+            name="expire_at"
+            label="Ngày hết hạn"
+            rules={[
+              {
+                required: true,
+                message: "Nhập ngày hết hạn",
+              },
+            ]}
+          >
             <DatePicker />
           </Form.Item>
           <Form.Item
@@ -363,24 +444,28 @@ const Dashboard = () => {
               span: 16,
             }}
           >
-            <Button type="primary" htmlType="submit">
+            <Button className="!bg-[#1677ff] text-white" htmlType="submit">
               Xác nhận
             </Button>
           </Form.Item>
         </Form>
       </Modal>
 
-      {userExtention ?
-        <ModalExtention open={userExtention} onClose={() => setUserExtention(false)} onConfirm={handleUpdateExtention} />
-        : null
-      }
+      {userExtention ? (
+        <ModalExtention
+          open={userExtention}
+          onClose={() => setUserExtention(false)}
+          onConfirm={handleUpdateExtention}
+        />
+      ) : null}
 
-      {userResetPassWord ?
-        <ModalResetPassword open={userResetPassWord} onClose={() => setUserResetPassWord(false)} onConfirm={handleUpdatePassword} />
-        : null
-      }
-
-
+      {userResetPassWord ? (
+        <ModalResetPassword
+          open={userResetPassWord}
+          onClose={() => setUserResetPassWord(false)}
+          onConfirm={handleUpdatePassword}
+        />
+      ) : null}
     </div>
   );
 };
